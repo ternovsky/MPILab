@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv) {
 
-	int rank, value, size, sum, depth, power, selected, i, j, last, last_sending, last_sending_count, to;
+	int rank, value, size, sum, depth, power, selected, i, j, last, last_sending, deficit, to, start;
 
     MPI_Status status;
     MPI_Init(&argc, &argv);
@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 	depth = ceil(log(size)/log(2));
 	last = size - 1;
 	last_sending = depth - 1;
-	last_sending_count = pow(2, depth) - size;
+	deficit = pow(2, depth) - size;
 	for(i = 0; i < depth; i++) {
 		power = pow(2, i);
 		if (rank / power % 2 == 0) {
@@ -25,22 +25,25 @@ int main(int argc, char **argv) {
 		} else {
 			selected = rank - power;
 		}
-		if (selected < size) {
-			if (i == last_sending && rank == last) {
+		if (selected <= last) {
+			if (rank == last && selected < last) {
 				to = selected;
-				for (j = 0; j < last_sending_count; j++) {
-					to++;
+				for(j = 0; j < deficit; j++) {
+					to++;		
+					if (to == last) 
+						break;			
 					MPI_Send(&sum,   1, MPI_INT, to, DEFAULT_TAG, MPI_COMM_WORLD); 
 				}
 			}
 			MPI_Send(&sum,   1, MPI_INT, selected, DEFAULT_TAG, MPI_COMM_WORLD);		
 			MPI_Recv(&value, 1, MPI_INT, selected, DEFAULT_TAG, MPI_COMM_WORLD, &status);
 			sum += value;
-        } else if (i == last_sending) {
-			if (rank < last) {	
+        } else {
+			start = last - power;
+			if (last / power % 2 != 0 && rank - start <= deficit && rank != last) {
 				MPI_Recv(&value, 1, MPI_INT, last, DEFAULT_TAG, MPI_COMM_WORLD, &status);
 				sum += value;
-			}			
+			}
 		}
 	}
 

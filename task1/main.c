@@ -31,7 +31,6 @@ int main(int argc, char **argv) {
 			MPI_Send(&value, 1, MPI_INT, rank - 1, DEFAULT_TAG, MPI_COMM_WORLD);
 		}
 	}
-	MPI_Barrier(MPI_COMM_WORLD);
 	printf("After: Sum = %d in the process %d.\n", value, rank);
 	
 	MPI_Finalize( );

@@ -5,6 +5,7 @@
 int main(int argc, char **argv) {
 
 	int rank, value, size, sum, depth, power, selected, i, j, last, last_sending, deficit, to, start;
+	double t1, t2;
 
     MPI_Status status;
     MPI_Init(&argc, &argv);
@@ -13,6 +14,9 @@ int main(int argc, char **argv) {
 	
 	sum = rank;
 	printf("Before: Sum = %d in the process %d\n", sum, rank);
+
+	if (rank == 0) 
+		t1 = MPI_Wtime();
 	
 	depth = ceil(log(size)/log(2));
 	last = size - 1;
@@ -45,6 +49,12 @@ int main(int argc, char **argv) {
 				sum += value;
 			}
 		}
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	if (rank == 0) {
+		t2 = MPI_Wtime();	
+		printf("Time = %f seconds.\n", t2 - t1);
 	}
 
 	printf("After: Sum = %d in the process %d\n", sum, rank);
